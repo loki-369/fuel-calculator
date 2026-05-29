@@ -1,47 +1,174 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Fuel Calculator</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fuel Dash | Advanced Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at top left, #0f172a, #020617);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #38bdf8;
+            cursor: pointer;
+            margin-top: -7px;
+            box-shadow: 0 0 15px #38bdf8;
+            transition: all 0.2s;
+        }
+
+        input[type=range]:active::-webkit-slider-thumb {
+            transform: scale(1.3);
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.07);
+            transform: translateY(-5px);
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { text-shadow: 0 0 10px rgba(56, 189, 248, 0.5); }
+            50% { text-shadow: 0 0 30px rgba(56, 189, 248, 0.8); }
+        }
+
+        #total-cost {
+            animation: pulse-glow 3s infinite;
+        }
+    </style>
 </head>
-<body>
+<body class="flex items-center justify-center p-4">
 
-<div class="container">
-  <h1>⛽ Fuel Calculator</h1>
+    <div class="glass-card w-full max-w-2xl rounded-[2.5rem] p-8 md:p-12 relative overflow-hidden">
+        <!-- Decoration -->
+        <div class="absolute -top-24 -right-24 w-64 h-64 bg-sky-500/20 rounded-full blur-3xl"></div>
+        
+        <header class="mb-10 text-center relative z-10">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-sky-500/10 rounded-2xl mb-4 border border-sky-500/20">
+                <i class="fa-solid fa-gas-pump text-2xl text-sky-400"></i>
+            </div>
+            <h1 class="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
+                FuelWise Dash
+            </h1>
+            <p class="text-slate-400 mt-2">Precision trip cost intelligence</p>
+        </header>
 
-  <div class="input-group">
-    <label>Distance</label>
-    <input type="number" id="distance" placeholder="Enter distance">
-    <select id="distanceUnit">
-      <option value="km">KM</option>
-      <option value="miles">Miles</option>
-    </select>
-  </div>
+        <main class="grid md:grid-cols-2 gap-10 items-center">
+            <!-- Controls Section -->
+            <div class="space-y-8">
+                <div>
+                    <div class="flex justify-between mb-3">
+                        <label class="text-sm font-semibold text-slate-300 uppercase tracking-wider">Distance</label>
+                        <span class="text-sky-400 font-bold" id="dist-val">250 km</span>
+                    </div>
+                    <input type="range" id="distance" min="1" max="2000" value="250" class="cursor-pointer">
+                </div>
 
-  <div class="input-group">
-    <label>Fuel Efficiency</label>
-    <input type="number" id="efficiency" placeholder="e.g. 15">
-    <select id="effUnit">
-      <option value="kml">KM/L</option>
-      <option value="mpg">MPG</option>
-    </select>
-  </div>
+                <div>
+                    <div class="flex justify-between mb-3">
+                        <label class="text-sm font-semibold text-slate-300 uppercase tracking-wider">Efficiency</label>
+                        <span class="text-sky-400 font-bold" id="eff-val">8.0 L/100km</span>
+                    </div>
+                    <input type="range" id="efficiency" min="1" max="30" step="0.1" value="8.0" class="cursor-pointer">
+                </div>
 
-  <div class="input-group">
-    <label>Fuel Price (per litre)</label>
-    <input type="number" id="price" placeholder="e.g. 100">
-  </div>
+                <div>
+                    <div class="flex justify-between mb-3">
+                        <label class="text-sm font-semibold text-slate-300 uppercase tracking-wider">Price/Liter</label>
+                        <span class="text-sky-400 font-bold" id="price-val">$1.50</span>
+                    </div>
+                    <input type="range" id="price" min="0.5" max="5" step="0.01" value="1.50" class="cursor-pointer">
+                </div>
+            </div>
 
-  <button onclick="calculateFuel()">Calculate</button>
+            <!-- Display Section -->
+            <div class="stat-card flex flex-col items-center justify-center text-center py-10 border-sky-500/20 bg-sky-500/5">
+                <span class="text-slate-400 text-sm font-medium mb-2">ESTIMATED TOTAL</span>
+                <div class="flex items-start">
+                    <span class="text-2xl font-bold text-sky-400 mt-2">$</span>
+                    <span id="total-cost" class="text-7xl font-extrabold text-white tracking-tighter">30.00</span>
+                </div>
+                <div class="mt-6 flex gap-4">
+                    <div class="text-xs px-3 py-1 bg-white/5 rounded-full text-slate-300">
+                        <i class="fa-solid fa-droplet mr-1"></i> <span id="total-fuel">20.0</span> L Fuel
+                    </div>
+                </div>
+            </div>
+        </main>
 
-  <div class="result">
-    <p id="fuelNeeded">Fuel Needed: --</p>
-    <p id="totalCost">Total Cost: --</p>
-  </div>
-</div>
+        <footer class="mt-10 pt-6 border-t border-white/5 text-center">
+            <button onclick="window.location.reload()" class="text-slate-500 hover:text-white transition-colors text-sm">
+                <i class="fa-solid fa-rotate-right mr-2"></i> Reset Parameters
+            </button>
+        </footer>
+    </div>
 
-<script src="script.js"></script>
+    <script>
+        const inputs = ['distance', 'efficiency', 'price'];
+        
+        function updateUI() {
+            const d = parseFloat(document.getElementById('distance').value);
+            const e = parseFloat(document.getElementById('efficiency').value);
+            const p = parseFloat(document.getElementById('price').value);
+
+            // Update Labels
+            document.getElementById('dist-val').innerText = `${d} km`;
+            document.getElementById('eff-val').innerText = `${e.toFixed(1)} L/100km`;
+            document.getElementById('price-val').innerText = `$${p.toFixed(2)}`;
+
+            // Calculations
+            const fuelNeeded = (d / 100) * e;
+            const totalCost = fuelNeeded * p;
+
+            // Update Results with animation feel
+            document.getElementById('total-cost').innerText = totalCost.toFixed(2);
+            document.getElementById('total-fuel').innerText = fuelNeeded.toFixed(1);
+        }
+
+        inputs.forEach(id => {
+            document.getElementById(id).addEventListener('input', updateUI);
+        });
+
+        // Initialize
+        updateUI();
+    </script>
 </body>
 </html>
