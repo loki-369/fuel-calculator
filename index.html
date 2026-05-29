@@ -3,172 +3,161 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fuel Dash | Advanced Calculator</title>
+    <title>Petrol Paisa — Smart Fuel Calculator</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: radial-gradient(circle at top left, #0f172a, #020617);
-            color: white;
-            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            background-color: #f9fafb;
+            color: #111827;
         }
 
-        .glass-card {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        .input-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s ease;
         }
 
-        input[type=range] {
+        .input-card:focus-within {
+            border-color: #000;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        input:focus {
+            outline: none;
+        }
+
+        /* Remove arrows/spinners from number inputs */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
             -webkit-appearance: none;
-            width: 100%;
-            background: transparent;
+            margin: 0;
         }
 
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-        }
-
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 20px;
-            width: 20px;
-            border-radius: 50%;
-            background: #38bdf8;
-            cursor: pointer;
-            margin-top: -7px;
-            box-shadow: 0 0 15px #38bdf8;
-            transition: all 0.2s;
-        }
-
-        input[type=range]:active::-webkit-slider-thumb {
-            transform: scale(1.3);
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 16px;
-            padding: 1.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.3s ease;
-        }
-
-        .stat-card:hover {
-            background: rgba(255, 255, 255, 0.07);
-            transform: translateY(-5px);
-        }
-
-        @keyframes pulse-glow {
-            0%, 100% { text-shadow: 0 0 10px rgba(56, 189, 248, 0.5); }
-            50% { text-shadow: 0 0 30px rgba(56, 189, 248, 0.8); }
-        }
-
-        #total-cost {
-            animation: pulse-glow 3s infinite;
+        .currency-pill {
+            transition: all 0.2s ease;
         }
     </style>
 </head>
-<body class="flex items-center justify-center p-4">
+<body class="flex items-center justify-center min-h-screen p-6">
 
-    <div class="glass-card w-full max-w-2xl rounded-[2.5rem] p-8 md:p-12 relative overflow-hidden">
-        <!-- Decoration -->
-        <div class="absolute -top-24 -right-24 w-64 h-64 bg-sky-500/20 rounded-full blur-3xl"></div>
-        
-        <header class="mb-10 text-center relative z-10">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-sky-500/10 rounded-2xl mb-4 border border-sky-500/20">
-                <i class="fa-solid fa-gas-pump text-2xl text-sky-400"></i>
+    <div class="w-full max-w-lg">
+        <!-- Branding -->
+        <header class="mb-10 flex justify-between items-end">
+            <div>
+                <h1 class="text-3xl font-black tracking-tight text-gray-900 uppercase">Petrol Paisa</h1>
+                <p class="text-gray-500 font-medium">Trip expense intelligence.</p>
             </div>
-            <h1 class="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
-                FuelWise Dash
-            </h1>
-            <p class="text-slate-400 mt-2">Precision trip cost intelligence</p>
+            <div class="text-right">
+                <span class="bg-gray-200 text-gray-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest">v2.0</span>
+            </div>
         </header>
 
-        <main class="grid md:grid-cols-2 gap-10 items-center">
-            <!-- Controls Section -->
-            <div class="space-y-8">
-                <div>
-                    <div class="flex justify-between mb-3">
-                        <label class="text-sm font-semibold text-slate-300 uppercase tracking-wider">Distance</label>
-                        <span class="text-sky-400 font-bold" id="dist-val">250 km</span>
+        <div class="space-y-6">
+            <!-- Currency Selection -->
+            <div class="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-2xl shadow-sm">
+                <label class="text-sm font-semibold text-gray-600">Primary Currency</label>
+                <select id="currency" onchange="calculate()" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-black focus:border-black block p-2 font-bold">
+                    <option value="INR" selected>INR (₹)</option>
+                    <option value="USD">USD ($)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="GBP">GBP (£)</option>
+                </select>
+            </div>
+
+            <!-- Inputs -->
+            <div class="grid grid-cols-1 gap-4">
+                <div class="input-card p-5 rounded-2xl">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest">Total Distance</label>
+                    <div class="flex items-center">
+                        <input type="number" id="distance" value="100" oninput="calculate()" class="w-full text-2xl font-bold bg-transparent">
+                        <span class="text-gray-900 font-bold ml-2">KM</span>
                     </div>
-                    <input type="range" id="distance" min="1" max="2000" value="250" class="cursor-pointer">
                 </div>
 
-                <div>
-                    <div class="flex justify-between mb-3">
-                        <label class="text-sm font-semibold text-slate-300 uppercase tracking-wider">Efficiency</label>
-                        <span class="text-sky-400 font-bold" id="eff-val">8.0 L/100km</span>
+                <div class="input-card p-5 rounded-2xl">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest">Mileage (Efficiency)</label>
+                    <div class="flex items-center">
+                        <input type="number" id="efficiency" value="15" oninput="calculate()" class="w-full text-2xl font-bold bg-transparent">
+                        <span class="text-gray-900 font-bold ml-2 text-sm whitespace-nowrap">KM / L</span>
                     </div>
-                    <input type="range" id="efficiency" min="1" max="30" step="0.1" value="8.0" class="cursor-pointer">
                 </div>
 
-                <div>
-                    <div class="flex justify-between mb-3">
-                        <label class="text-sm font-semibold text-slate-300 uppercase tracking-wider">Price/Liter</label>
-                        <span class="text-sky-400 font-bold" id="price-val">$1.50</span>
+                <div class="input-card p-5 rounded-2xl">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest">Fuel Price</label>
+                    <div class="flex items-center">
+                        <span id="symbol-input" class="text-gray-900 text-2xl font-bold mr-1">₹</span>
+                        <input type="number" id="price" value="100" oninput="calculate()" class="w-full text-2xl font-bold bg-transparent">
                     </div>
-                    <input type="range" id="price" min="0.5" max="5" step="0.01" value="1.50" class="cursor-pointer">
                 </div>
             </div>
 
-            <!-- Display Section -->
-            <div class="stat-card flex flex-col items-center justify-center text-center py-10 border-sky-500/20 bg-sky-500/5">
-                <span class="text-slate-400 text-sm font-medium mb-2">ESTIMATED TOTAL</span>
-                <div class="flex items-start">
-                    <span class="text-2xl font-bold text-sky-400 mt-2">$</span>
-                    <span id="total-cost" class="text-7xl font-extrabold text-white tracking-tighter">30.00</span>
-                </div>
-                <div class="mt-6 flex gap-4">
-                    <div class="text-xs px-3 py-1 bg-white/5 rounded-full text-slate-300">
-                        <i class="fa-solid fa-droplet mr-1"></i> <span id="total-fuel">20.0</span> L Fuel
+            <!-- Result Box (High Contrast) -->
+            <div class="bg-black rounded-[2rem] p-8 text-white shadow-2xl relative overflow-hidden">
+                <div class="relative z-10">
+                    <p class="text-gray-400 text-xs font-bold uppercase tracking-[0.2em] mb-2">Estimated Expense</p>
+                    <div class="flex items-baseline">
+                        <span id="symbol-result" class="text-3xl font-light mr-2 text-gray-400">₹</span>
+                        <span id="total-cost" class="text-6xl font-black tracking-tighter">0.00</span>
+                    </div>
+                    
+                    <div class="mt-8 pt-6 border-t border-white/10 flex justify-between items-center">
+                        <div>
+                            <p class="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Fuel Consumption</p>
+                            <p class="text-xl font-bold"><span id="fuel-liters">0.0</span> <span class="text-xs text-gray-500">LITERS</span></p>
+                        </div>
+                        <div class="h-10 w-10 bg-white/5 rounded-full flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        </div>
                     </div>
                 </div>
             </div>
-        </main>
+        </div>
 
-        <footer class="mt-10 pt-6 border-t border-white/5 text-center">
-            <button onclick="window.location.reload()" class="text-slate-500 hover:text-white transition-colors text-sm">
-                <i class="fa-solid fa-rotate-right mr-2"></i> Reset Parameters
-            </button>
+        <footer class="mt-12 text-center">
+            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-[0.3em]">Petrol Paisa Utility</p>
         </footer>
     </div>
 
     <script>
-        const inputs = ['distance', 'efficiency', 'price'];
-        
-        function updateUI() {
-            const d = parseFloat(document.getElementById('distance').value);
-            const e = parseFloat(document.getElementById('efficiency').value);
-            const p = parseFloat(document.getElementById('price').value);
+        const symbols = {
+            INR: '₹',
+            USD: '$',
+            EUR: '€',
+            GBP: '£'
+        };
 
-            // Update Labels
-            document.getElementById('dist-val').innerText = `${d} km`;
-            document.getElementById('eff-val').innerText = `${e.toFixed(1)} L/100km`;
-            document.getElementById('price-val').innerText = `$${p.toFixed(2)}`;
+        function calculate() {
+            const distance = parseFloat(document.getElementById('distance').value) || 0;
+            const efficiency = parseFloat(document.getElementById('efficiency').value) || 0;
+            const price = parseFloat(document.getElementById('price').value) || 0;
+            const currency = document.getElementById('currency').value;
 
-            // Calculations
-            const fuelNeeded = (d / 100) * e;
-            const totalCost = fuelNeeded * p;
+            // Update UI Symbols
+            document.getElementById('symbol-input').innerText = symbols[currency];
+            document.getElementById('symbol-result').innerText = symbols[currency];
 
-            // Update Results with animation feel
-            document.getElementById('total-cost').innerText = totalCost.toFixed(2);
-            document.getElementById('total-fuel').innerText = fuelNeeded.toFixed(1);
+            // Math
+            if (efficiency > 0) {
+                const litersNeeded = distance / efficiency;
+                const totalCost = litersNeeded * price;
+
+                // Update Values with localized formatting
+                document.getElementById('total-cost').innerText = totalCost.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+                document.getElementById('fuel-liters').innerText = litersNeeded.toFixed(2);
+            } else {
+                document.getElementById('total-cost').innerText = "0.00";
+                document.getElementById('fuel-liters').innerText = "0.00";
+            }
         }
 
-        inputs.forEach(id => {
-            document.getElementById(id).addEventListener('input', updateUI);
-        });
-
-        // Initialize
-        updateUI();
+        // Run on load
+        calculate();
     </script>
 </body>
 </html>
