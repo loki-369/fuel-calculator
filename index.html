@@ -6,11 +6,11 @@
     <title>Petrol Paisa — Smart Fuel Calculator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
         
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f9fafb;
+            background-color: #f3f4f6;
             color: #111827;
         }
 
@@ -22,22 +22,57 @@
 
         .input-card:focus-within {
             border-color: #000;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
 
-        input:focus {
-            outline: none;
-        }
+        input:focus { outline: none; }
 
-        /* Remove arrows/spinners from number inputs */
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
 
-        .currency-pill {
-            transition: all 0.2s ease;
+        /* Toggle Switch Styling */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 20px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px; width: 14px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider { background-color: #000; }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        .hidden-section {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .show-section {
+            max-height: 300px;
         }
     </style>
 </head>
@@ -45,89 +80,165 @@
 
     <div class="w-full max-w-lg">
         <!-- Branding -->
-        <header class="mb-10 flex justify-between items-end">
+        <header class="mb-8 flex justify-between items-start">
             <div>
-                <h1 class="text-3xl font-black tracking-tight text-gray-900 uppercase">Petrol Paisa</h1>
-                <p class="text-gray-500 font-medium">Trip expense intelligence.</p>
+                <h1 class="text-3xl font-black tracking-tighter text-gray-900 uppercase italic">Petrol Paisa</h1>
+                <p class="text-gray-500 text-xs font-bold tracking-widest uppercase mt-1">Economy Intelligence</p>
             </div>
-            <div class="text-right">
-                <span class="bg-gray-200 text-gray-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest">v2.0</span>
+            <div class="flex flex-col items-end">
+                <label class="text-[10px] font-bold text-gray-400 uppercase mb-1">Route Mode</label>
+                <label class="switch">
+                    <input type="checkbox" id="route-toggle" onchange="toggleRouteSection()">
+                    <span class="slider"></span>
+                </label>
             </div>
         </header>
 
-        <div class="space-y-6">
-            <!-- Currency Selection -->
-            <div class="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-2xl shadow-sm">
-                <label class="text-sm font-semibold text-gray-600">Primary Currency</label>
-                <select id="currency" onchange="calculate()" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-black focus:border-black block p-2 font-bold">
-                    <option value="INR" selected>INR (₹)</option>
-                    <option value="USD">USD ($)</option>
-                    <option value="EUR">EUR (€)</option>
-                    <option value="GBP">GBP (£)</option>
-                </select>
-            </div>
-
-            <!-- Inputs -->
-            <div class="grid grid-cols-1 gap-4">
-                <div class="input-card p-5 rounded-2xl">
-                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest">Total Distance</label>
-                    <div class="flex items-center">
-                        <input type="number" id="distance" value="100" oninput="calculate()" class="w-full text-2xl font-bold bg-transparent">
-                        <span class="text-gray-900 font-bold ml-2">KM</span>
+        <div class="space-y-4">
+            
+            <!-- Optional Location Section -->
+            <div id="route-section" class="hidden-section space-y-3">
+                <div class="bg-gray-900 rounded-2xl p-5 space-y-3">
+                    <div class="flex gap-3">
+                        <div class="flex-1">
+                            <label class="text-[10px] font-bold text-gray-500 uppercase">From</label>
+                            <input type="text" id="loc-from" placeholder="City name" class="w-full bg-gray-800 text-white text-sm p-2 rounded-lg border border-gray-700 mt-1">
+                        </div>
+                        <div class="flex-1">
+                            <label class="text-[10px] font-bold text-gray-500 uppercase">To</label>
+                            <input type="text" id="loc-to" placeholder="Destination" class="w-full bg-gray-800 text-white text-sm p-2 rounded-lg border border-gray-700 mt-1">
+                        </div>
                     </div>
-                </div>
-
-                <div class="input-card p-5 rounded-2xl">
-                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest">Mileage (Efficiency)</label>
-                    <div class="flex items-center">
-                        <input type="number" id="efficiency" value="15" oninput="calculate()" class="w-full text-2xl font-bold bg-transparent">
-                        <span class="text-gray-900 font-bold ml-2 text-sm whitespace-nowrap">KM / L</span>
-                    </div>
-                </div>
-
-                <div class="input-card p-5 rounded-2xl">
-                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest">Fuel Price</label>
-                    <div class="flex items-center">
-                        <span id="symbol-input" class="text-gray-900 text-2xl font-bold mr-1">₹</span>
-                        <input type="number" id="price" value="100" oninput="calculate()" class="w-full text-2xl font-bold bg-transparent">
-                    </div>
+                    <button onclick="fetchDistance()" id="fetch-btn" class="w-full bg-white text-black text-xs font-bold py-2 rounded-lg hover:bg-gray-200 transition-all uppercase tracking-widest">
+                        Calculate Distance
+                    </button>
+                    <p id="route-status" class="text-[10px] text-gray-400 text-center"></p>
                 </div>
             </div>
 
-            <!-- Result Box (High Contrast) -->
-            <div class="bg-black rounded-[2rem] p-8 text-white shadow-2xl relative overflow-hidden">
-                <div class="relative z-10">
-                    <p class="text-gray-400 text-xs font-bold uppercase tracking-[0.2em] mb-2">Estimated Expense</p>
+            <!-- Main Inputs -->
+            <div class="grid grid-cols-1 gap-3">
+                <!-- Currency (Simplified) -->
+                <div class="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-xl">
+                    <span class="text-xs font-bold text-gray-500 uppercase">Currency</span>
+                    <select id="currency" onchange="calculate()" class="font-bold text-sm bg-transparent focus:outline-none">
+                        <option value="INR">INR (₹)</option>
+                        <option value="USD">USD ($)</option>
+                        <option value="EUR">EUR (€)</option>
+                    </select>
+                </div>
+
+                <div class="input-card p-4 rounded-2xl">
+                    <label class="block text-[10px] font-black text-gray-400 uppercase mb-1">Trip Distance</label>
                     <div class="flex items-baseline">
-                        <span id="symbol-result" class="text-3xl font-light mr-2 text-gray-400">₹</span>
-                        <span id="total-cost" class="text-6xl font-black tracking-tighter">0.00</span>
+                        <input type="number" id="distance" value="100" oninput="calculate()" class="w-full text-3xl font-black bg-transparent">
+                        <span class="text-gray-400 font-bold ml-2">KM</span>
                     </div>
-                    
-                    <div class="mt-8 pt-6 border-t border-white/10 flex justify-between items-center">
-                        <div>
-                            <p class="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Fuel Consumption</p>
-                            <p class="text-xl font-bold"><span id="fuel-liters">0.0</span> <span class="text-xs text-gray-500">LITERS</span></p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="input-card p-4 rounded-2xl">
+                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-1">Mileage</label>
+                        <div class="flex items-baseline">
+                            <input type="number" id="efficiency" value="15" oninput="calculate()" class="w-full text-xl font-bold bg-transparent">
+                            <span class="text-gray-400 text-[10px] font-bold ml-1">KMPL</span>
                         </div>
-                        <div class="h-10 w-10 bg-white/5 rounded-full flex items-center justify-center">
-                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    </div>
+                    <div class="input-card p-4 rounded-2xl">
+                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-1">Fuel Price</label>
+                        <div class="flex items-baseline">
+                            <span id="symbol-input" class="text-gray-400 font-bold mr-1">₹</span>
+                            <input type="number" id="price" value="100" oninput="calculate()" class="w-full text-xl font-bold bg-transparent">
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Result -->
+            <div class="bg-black rounded-[2.5rem] p-8 text-white shadow-2xl relative">
+                <p class="text-gray-500 text-[10px] font-black uppercase tracking-[0.3em] mb-4">Total Paisa Needed</p>
+                <div class="flex items-baseline">
+                    <span id="symbol-result" class="text-2xl font-light text-gray-500 mr-2">₹</span>
+                    <span id="total-cost" class="text-7xl font-black tracking-tighter">0.00</span>
+                </div>
+                
+                <div class="mt-8 pt-6 border-t border-white/10 flex justify-between">
+                    <div>
+                        <p class="text-gray-500 text-[10px] font-bold uppercase">Required</p>
+                        <p class="text-xl font-black"><span id="fuel-liters">0.0</span> <span class="text-xs font-normal">Liters</span></p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-gray-500 text-[10px] font-bold uppercase">Efficiency</p>
+                        <p class="text-xl font-black text-green-500">Optimized</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <footer class="mt-12 text-center">
-            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-[0.3em]">Petrol Paisa Utility</p>
+        <footer class="mt-10 text-center opacity-30 hover:opacity-100 transition-opacity">
+            <p class="text-gray-900 text-[10px] font-black uppercase tracking-[0.5em]">Petrol Paisa Utility v2.1</p>
         </footer>
     </div>
 
     <script>
-        const symbols = {
-            INR: '₹',
-            USD: '$',
-            EUR: '€',
-            GBP: '£'
-        };
+        const symbols = { INR: '₹', USD: '$', EUR: '€' };
+
+        function toggleRouteSection() {
+            const section = document.getElementById('route-section');
+            section.classList.toggle('show-section');
+        }
+
+        async function fetchDistance() {
+            const from = document.getElementById('loc-from').value;
+            const to = document.getElementById('loc-to').value;
+            const status = document.getElementById('route-status');
+            const btn = document.getElementById('fetch-btn');
+
+            if (!from || !to) {
+                status.innerText = "Please enter both locations.";
+                return;
+            }
+
+            status.innerText = "Searching route...";
+            btn.disabled = true;
+
+            try {
+                // Fetch coordinates for 'from'
+                const res1 = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${from}`);
+                const data1 = await res1.json();
+                
+                // Fetch coordinates for 'to'
+                const res2 = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${to}`);
+                const data2 = await res2.json();
+
+                if (data1.length > 0 && data2.length > 0) {
+                    const lat1 = data1[0].lat; const lon1 = data1[0].lon;
+                    const lat2 = data2[0].lat; const lon2 = data2[0].lon;
+
+                    // Calculate Haversine Distance (Crow flies)
+                    const R = 6371; // Earth radius in KM
+                    const dLat = (lat2 - lat1) * Math.PI / 180;
+                    const dLon = (lon2 - lon1) * Math.PI / 180;
+                    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                              Math.sin(dLon/2) * Math.sin(dLon/2);
+                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                    const distance = R * c;
+
+                    // Road distance is usually ~20-30% more than straight line
+                    const roadDistance = Math.round(distance * 1.25); 
+
+                    document.getElementById('distance').value = roadDistance;
+                    status.innerText = `Approx. Road Distance: ${roadDistance} KM`;
+                    calculate();
+                } else {
+                    status.innerText = "Location not found.";
+                }
+            } catch (error) {
+                status.innerText = "Error fetching data.";
+            }
+            btn.disabled = false;
+        }
 
         function calculate() {
             const distance = parseFloat(document.getElementById('distance').value) || 0;
@@ -135,28 +246,17 @@
             const price = parseFloat(document.getElementById('price').value) || 0;
             const currency = document.getElementById('currency').value;
 
-            // Update UI Symbols
             document.getElementById('symbol-input').innerText = symbols[currency];
             document.getElementById('symbol-result').innerText = symbols[currency];
 
-            // Math
             if (efficiency > 0) {
-                const litersNeeded = distance / efficiency;
-                const totalCost = litersNeeded * price;
-
-                // Update Values with localized formatting
-                document.getElementById('total-cost').innerText = totalCost.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                });
-                document.getElementById('fuel-liters').innerText = litersNeeded.toFixed(2);
-            } else {
-                document.getElementById('total-cost').innerText = "0.00";
-                document.getElementById('fuel-liters').innerText = "0.00";
+                const liters = distance / efficiency;
+                const cost = liters * price;
+                document.getElementById('total-cost').innerText = cost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                document.getElementById('fuel-liters').innerText = liters.toFixed(1);
             }
         }
 
-        // Run on load
         calculate();
     </script>
 </body>
