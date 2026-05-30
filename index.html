@@ -3,279 +3,251 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Petrol Paisa — Smart Fuel Calculator</title>
+    <meta name="description" content="Petrol Paisa - The ultimate fuel expense calculator for road trips with multiple stops and carpooling splits.">
+    <title>Petrol Paisa — Pro Trip Expense Planner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
         
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-            color: #111827;
-        }
-
-        .input-card {
-            background: white;
-            border: 1px solid #e5e7eb;
-            transition: all 0.2s ease;
-        }
-
-        .input-card:focus-within {
-            border-color: #000;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; color: #111827; }
+        .input-card { background: white; border: 1px solid #e5e7eb; transition: all 0.2s ease; }
+        .input-card:focus-within { border-color: #000; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
         input:focus { outline: none; }
-
-        /* Fix for the overflow issue in the black card */
-        #total-cost {
-            word-wrap: break-word;
-            word-break: break-all;
-            line-height: 1;
-        }
-
-        /* Location Suggestion Styling */
+        
+        /* Suggestions Dropdown */
         .suggestion-box {
-            position: absolute;
-            z-index: 50;
-            width: 100%;
-            background: #1f2937; /* Gray-800 */
-            border: 1px solid #374151;
-            border-radius: 0.5rem;
-            margin-top: 2px;
-            max-height: 200px;
-            overflow-y: auto;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            position: absolute; z-index: 50; width: 100%; background: #1f2937;
+            border: 1px solid #374151; border-radius: 0.5rem; margin-top: 2px;
+            max-height: 160px; overflow-y: auto; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
         }
+        .suggestion-item { padding: 8px 12px; cursor: pointer; font-size: 0.75rem; color: #d1d5db; border-bottom: 1px solid #374151; }
+        .suggestion-item:hover { background: #374151; color: white; }
 
-        .suggestion-item {
-            padding: 8px 12px;
-            cursor: pointer;
-            font-size: 0.75rem;
-            color: #d1d5db;
-            border-bottom: 1px solid #374151;
-        }
+        /* Animation for adding stops */
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .new-stop { animation: slideIn 0.3s ease-out; }
 
-        .suggestion-item:hover {
-            background: #374151;
-            color: white;
-        }
-
-        /* Toggle Switch Styling */
-        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider {
-            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #ccc; transition: .4s; border-radius: 20px;
-        }
-        .slider:before {
-            position: absolute; content: ""; height: 14px; width: 14px;
-            left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%;
-        }
-        input:checked + .slider { background-color: #000; }
-        input:checked + .slider:before { transform: translateX(20px); }
-
-        .hidden-section { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
-        .show-section { max-height: 500px; }
+        @media print { .no-print { display: none; } body { background: white; } }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
+<body class="flex items-start justify-center min-h-screen p-4 md:p-10">
 
-    <div class="w-full max-w-lg">
-        <!-- Branding -->
-        <header class="mb-6 flex justify-between items-start">
+    <div class="w-full max-w-2xl">
+        <!-- Header -->
+        <header class="mb-8 flex justify-between items-center no-print">
             <div>
-                <h1 class="text-3xl font-black tracking-tighter text-gray-900 uppercase italic">Petrol Paisa</h1>
-                <p class="text-gray-500 text-[10px] font-bold tracking-widest uppercase mt-1">v2.2 • Location Intelligence</p>
+                <h1 class="text-4xl font-black tracking-tighter text-gray-900 uppercase italic">Petrol Paisa</h1>
+                <p class="text-gray-500 text-[10px] font-bold tracking-[0.3em] uppercase">Pro Trip Planner v2.5</p>
             </div>
-            <div class="flex flex-col items-end">
-                <label class="text-[10px] font-bold text-gray-400 uppercase mb-1">Route Mode</label>
-                <label class="switch">
-                    <input type="checkbox" id="route-toggle" onchange="toggleRouteSection()">
-                    <span class="slider"></span>
-                </label>
-            </div>
+            <button onclick="window.print()" class="text-xs font-bold bg-gray-200 px-4 py-2 rounded-full hover:bg-gray-300">PRINT</button>
         </header>
 
-        <div class="space-y-4">
-            
-            <!-- Optional Location Section -->
-            <div id="route-section" class="hidden-section space-y-3">
-                <div class="bg-gray-900 rounded-2xl p-5 space-y-4">
-                    <div class="grid grid-cols-1 gap-4">
-                        <div class="relative">
-                            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">From</label>
-                            <input type="text" id="loc-from" autocomplete="off" oninput="debounceSearch('loc-from')" placeholder="Starting City" class="w-full bg-gray-800 text-white text-sm p-3 rounded-xl border border-gray-700 mt-1 focus:border-white transition-colors">
-                            <div id="suggestions-loc-from" class="suggestion-box hidden"></div>
-                        </div>
-                        <div class="relative">
-                            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">To</label>
-                            <input type="text" id="loc-to" autocomplete="off" oninput="debounceSearch('loc-to')" placeholder="Destination City" class="w-full bg-gray-800 text-white text-sm p-3 rounded-xl border border-gray-700 mt-1 focus:border-white transition-colors">
-                            <div id="suggestions-loc-to" class="suggestion-box hidden"></div>
-                        </div>
-                    </div>
-                    <button onclick="fetchDistance()" id="fetch-btn" class="w-full bg-white text-black text-xs font-black py-3 rounded-xl hover:bg-gray-200 transition-all uppercase tracking-widest">
-                        Calculate Route
-                    </button>
-                    <p id="route-status" class="text-[10px] text-gray-400 text-center font-medium"></p>
-                </div>
-            </div>
-
-            <!-- Main Inputs -->
-            <div class="grid grid-cols-1 gap-3">
-                <div class="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-xl">
-                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Currency</span>
-                    <select id="currency" onchange="calculate()" class="font-bold text-sm bg-transparent focus:outline-none">
-                        <option value="INR">INR (₹)</option>
-                        <option value="USD">USD ($)</option>
-                        <option value="EUR">EUR (€)</option>
-                    </select>
-                </div>
-
-                <div class="input-card p-5 rounded-2xl">
-                    <label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Trip Distance</label>
-                    <div class="flex items-baseline">
-                        <input type="number" id="distance" value="100" oninput="calculate()" class="w-full text-4xl font-black bg-transparent">
-                        <span class="text-gray-400 font-bold ml-2">KM</span>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="input-card p-4 rounded-2xl">
-                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Mileage</label>
-                        <div class="flex items-baseline">
-                            <input type="number" id="efficiency" value="20" oninput="calculate()" class="w-full text-2xl font-bold bg-transparent">
-                            <span class="text-gray-400 text-[10px] font-bold ml-1">KMPL</span>
-                        </div>
-                    </div>
-                    <div class="input-card p-4 rounded-2xl">
-                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Fuel Price</label>
-                        <div class="flex items-baseline">
-                            <span id="symbol-input" class="text-gray-900 font-bold mr-1">₹</span>
-                            <input type="number" id="price" value="100" oninput="calculate()" class="w-full text-2xl font-bold bg-transparent">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Result (Fixed Overflow) -->
-            <div class="bg-black rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden">
-                <p class="text-gray-500 text-[10px] font-black uppercase tracking-[0.3em] mb-4">Total Paisa Needed</p>
-                <div class="flex items-baseline flex-wrap">
-                    <span id="symbol-result" class="text-2xl font-light text-gray-500 mr-2">₹</span>
-                    <!-- Fixed text size to prevent breaking on mobile -->
-                    <span id="total-cost" class="text-4xl md:text-6xl font-black tracking-tighter">0.00</span>
-                </div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Left Side: Inputs -->
+            <div class="lg:col-span-7 space-y-6">
                 
-                <div class="mt-8 pt-6 border-t border-white/10 flex justify-between items-center">
-                    <div>
-                        <p class="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Required</p>
-                        <p class="text-xl font-black"><span id="fuel-liters">0.0</span> <span class="text-xs font-normal text-gray-500">Liters</span></p>
+                <!-- Route Section -->
+                <div class="bg-gray-900 rounded-[2rem] p-6 shadow-xl no-print">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-white text-xs font-black uppercase tracking-widest">Route Planner</h2>
+                        <button onclick="addStop()" class="text-[10px] text-gray-400 border border-gray-700 px-2 py-1 rounded hover:text-white hover:border-white">+ ADD STOP</button>
                     </div>
-                    <div class="text-right">
-                        <p class="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Status</p>
-                        <p class="text-sm font-black text-green-500 tracking-tighter uppercase italic">Optimized</p>
+                    
+                    <div id="stops-container" class="space-y-3">
+                        <!-- Start Location -->
+                        <div class="relative">
+                            <input type="text" id="stop-0" oninput="debounceSearch(0)" placeholder="Starting Point" class="w-full bg-gray-800 text-white text-sm p-3 rounded-xl border border-gray-700">
+                            <div id="suggestions-0" class="suggestion-box hidden"></div>
+                        </div>
+                        <!-- Destination (Always last) -->
+                        <div class="relative">
+                            <input type="text" id="stop-final" oninput="debounceSearch('final')" placeholder="Final Destination" class="w-full bg-gray-800 text-white text-sm p-3 rounded-xl border border-gray-700">
+                            <div id="suggestions-final" class="suggestion-box hidden"></div>
+                        </div>
+                    </div>
+
+                    <button onclick="calculateFullRoute()" id="route-btn" class="w-full mt-4 bg-white text-black text-xs font-black py-3 rounded-xl hover:bg-gray-200 transition-all uppercase">
+                        Calculate Route Distance
+                    </button>
+                </div>
+
+                <!-- Settings -->
+                <div class="grid grid-cols-2 gap-4 no-print">
+                    <div class="input-card p-4 rounded-2xl flex items-center justify-between">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase">Round Trip</span>
+                        <input type="checkbox" id="round-trip" onchange="calculate()" class="w-5 h-5 accent-black">
+                    </div>
+                    <div class="input-card p-4 rounded-2xl flex items-center justify-between">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase">Currency</span>
+                        <select id="currency" onchange="calculate()" class="font-bold text-sm bg-transparent">
+                            <option value="INR">INR (₹)</option>
+                            <option value="USD">USD ($)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Main Numbers -->
+                <div class="space-y-3">
+                    <div class="input-card p-5 rounded-2xl">
+                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Distance (KM)</label>
+                        <input type="number" id="distance" value="100" oninput="calculate()" class="w-full text-4xl font-black">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="input-card p-4 rounded-2xl">
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Mileage (KMPL)</label>
+                            <input type="number" id="efficiency" value="20" oninput="calculate()" class="w-full text-xl font-bold">
+                        </div>
+                        <div class="input-card p-4 rounded-2xl">
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Price / Litre</label>
+                            <input type="number" id="price" value="100" oninput="calculate()" class="w-full text-xl font-bold">
+                        </div>
+                    </div>
+
+                    <div class="input-card p-4 rounded-2xl flex items-center justify-between">
+                        <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Passengers (Split)</label>
+                        <input type="number" id="passengers" value="1" min="1" oninput="calculate()" class="w-12 text-center font-bold border-b border-gray-300">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Results -->
+            <div class="lg:col-span-5">
+                <div class="bg-black rounded-[2.5rem] p-8 text-white shadow-2xl sticky top-10">
+                    <p class="text-gray-500 text-[10px] font-black uppercase tracking-[0.3em] mb-4">Total Trip Cost</p>
+                    <div class="flex items-baseline flex-wrap mb-2">
+                        <span id="symbol-result" class="text-2xl font-light text-gray-500 mr-2">₹</span>
+                        <span id="total-cost" class="text-5xl font-black tracking-tighter">0.00</span>
+                    </div>
+                    
+                    <div id="split-box" class="hidden mb-8">
+                        <p class="text-green-500 text-[10px] font-black uppercase tracking-widest">Per Person</p>
+                        <p class="text-2xl font-bold">₹<span id="per-person">0.00</span></p>
+                    </div>
+
+                    <div class="space-y-4 pt-6 border-t border-white/10">
+                        <div class="flex justify-between">
+                            <span class="text-gray-500 text-[10px] font-bold uppercase">Distance</span>
+                            <span class="font-bold text-sm"><span id="res-dist">0</span> KM</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500 text-[10px] font-bold uppercase">Fuel Needed</span>
+                            <span class="font-bold text-sm"><span id="res-fuel">0</span> L</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500 text-[10px] font-bold uppercase">Trip Type</span>
+                            <span id="res-type" class="font-bold text-[10px] bg-white/10 px-2 py-1 rounded">1-WAY</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-10">
+                        <div class="p-4 bg-white/5 rounded-2xl border border-white/10 text-center">
+                            <p class="text-[10px] text-gray-400 mb-1 uppercase tracking-widest font-bold">Pro Tip</p>
+                            <p class="text-[10px] leading-relaxed">Maintaining steady speeds between 60-80 km/h can improve fuel efficiency by up to 15%.</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <footer class="mt-8 text-center">
-            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-[0.4em]">Petrol Paisa Utility</p>
-        </footer>
     </div>
 
     <script>
-        const symbols = { INR: '₹', USD: '$', EUR: '€' };
+        const symbols = { INR: '₹', USD: '$' };
+        let stopCount = 1;
         let timer;
 
-        function toggleRouteSection() {
-            document.getElementById('route-section').classList.toggle('show-section');
+        function addStop() {
+            const container = document.getElementById('stops-container');
+            const final = document.getElementById('stop-final').parentElement;
+            const div = document.createElement('div');
+            div.className = 'relative new-stop';
+            const id = stopCount++;
+            div.innerHTML = `
+                <input type="text" id="stop-${id}" oninput="debounceSearch(${id})" placeholder="Stop ${id}" class="w-full bg-gray-800 text-white text-sm p-3 rounded-xl border border-gray-700">
+                <div id="suggestions-${id}" class="suggestion-box hidden"></div>
+                <button onclick="this.parentElement.remove()" class="absolute right-3 top-3 text-gray-500 text-xs">✕</button>
+            `;
+            container.insertBefore(div, final);
         }
 
-        // Recommendations Logic
-        function debounceSearch(inputId) {
+        function debounceSearch(id) {
             clearTimeout(timer);
-            const query = document.getElementById(inputId).value;
-            if (query.length < 3) {
-                document.getElementById(`suggestions-${inputId}`).classList.add('hidden');
-                return;
+            const query = document.getElementById(`stop-${id}`).value;
+            if (query.length < 3) { document.getElementById(`suggestions-${id}`).classList.add('hidden'); return; }
+            timer = setTimeout(() => getSuggestions(query, id), 500);
+        }
+
+        async function getSuggestions(query, id) {
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=5`);
+            const data = await res.json();
+            const container = document.getElementById(`suggestions-${id}`);
+            container.innerHTML = '';
+            if (data.length > 0) {
+                container.classList.remove('hidden');
+                data.forEach(place => {
+                    const d = document.createElement('div');
+                    d.className = 'suggestion-item';
+                    d.innerText = place.display_name;
+                    d.onclick = () => { document.getElementById(`stop-${id}`).value = place.display_name; container.classList.add('hidden'); };
+                    container.appendChild(d);
+                });
             }
-            timer = setTimeout(() => getSuggestions(query, inputId), 500);
         }
 
-        async function getSuggestions(query, inputId) {
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=5`);
+        async function calculateFullRoute() {
+            const btn = document.getElementById('route-btn');
+            btn.innerText = "CALCULATING SEQUENTIAL ROUTE...";
+            const stopInputs = Array.from(document.querySelectorAll('[id^="stop-"]'));
+            const coords = [];
+
+            for (let input of stopInputs) {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${input.value}`);
                 const data = await res.json();
-                const container = document.getElementById(`suggestions-${inputId}`);
-                
-                container.innerHTML = '';
-                if (data.length > 0) {
-                    container.classList.remove('hidden');
-                    data.forEach(place => {
-                        const div = document.createElement('div');
-                        div.className = 'suggestion-item';
-                        div.innerText = place.display_name;
-                        div.onclick = () => {
-                            document.getElementById(inputId).value = place.display_name;
-                            container.classList.add('hidden');
-                        };
-                        container.appendChild(div);
-                    });
-                }
-            } catch (e) { console.error("Error fetching suggestions"); }
+                if (data[0]) coords.push({ lat: data[0].lat, lon: data[0].lon });
+            }
+
+            let totalDist = 0;
+            for (let i = 0; i < coords.length - 1; i++) {
+                totalDist += haversine(coords[i], coords[i+1]);
+            }
+
+            document.getElementById('distance').value = Math.round(totalDist * 1.25); // +25% for road curves
+            btn.innerText = "CALCULATE ROUTE DISTANCE";
+            calculate();
         }
 
-        // Distance Calculation
-        async function fetchDistance() {
-            const from = document.getElementById('loc-from').value;
-            const to = document.getElementById('loc-to').value;
-            const status = document.getElementById('route-status');
-            const btn = document.getElementById('fetch-btn');
-
-            if (!from || !to) { status.innerText = "Enter both locations."; return; }
-
-            status.innerText = "Calculating precise route...";
-            btn.innerText = "Calculating...";
-            btn.disabled = true;
-
-            try {
-                const res1 = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${from}`);
-                const d1 = await res1.json();
-                const res2 = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${to}`);
-                const d2 = await res2.json();
-
-                if (d1.length > 0 && d2.length > 0) {
-                    const R = 6371; 
-                    const dLat = (d2[0].lat - d1[0].lat) * Math.PI / 180;
-                    const dLon = (d2[0].lon - d1[0].lon) * Math.PI / 180;
-                    const a = Math.sin(dLat/2)**2 + Math.cos(d1[0].lat * Math.PI/180) * Math.cos(d2[0].lat * Math.PI/180) * Math.sin(dLon/2)**2;
-                    const roadDistance = Math.round((R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))) * 1.25); 
-
-                    document.getElementById('distance').value = roadDistance;
-                    status.innerText = `Route set: ${roadDistance} KM`;
-                    calculate();
-                } else { status.innerText = "Location not found."; }
-            } catch (error) { status.innerText = "Network Error."; }
-            btn.disabled = false;
-            btn.innerText = "Calculate Route";
+        function haversine(p1, p2) {
+            const R = 6371;
+            const dLat = (p2.lat - p1.lat) * Math.PI / 180;
+            const dLon = (p2.lon - p1.lon) * Math.PI / 180;
+            const a = Math.sin(dLat/2)**2 + Math.cos(p1.lat * Math.PI/180) * Math.cos(p2.lat * Math.PI/180) * Math.sin(dLon/2)**2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         }
 
         function calculate() {
-            const distance = parseFloat(document.getElementById('distance').value) || 0;
-            const efficiency = parseFloat(document.getElementById('efficiency').value) || 0;
+            let dist = parseFloat(document.getElementById('distance').value) || 0;
+            const eff = parseFloat(document.getElementById('efficiency').value) || 0;
             const price = parseFloat(document.getElementById('price').value) || 0;
-            const currency = document.getElementById('currency').value;
+            const pass = parseFloat(document.getElementById('passengers').value) || 1;
+            const isRound = document.getElementById('round-trip').checked;
+            const curr = document.getElementById('currency').value;
 
-            document.getElementById('symbol-input').innerText = symbols[currency];
-            document.getElementById('symbol-result').innerText = symbols[currency];
+            if (isRound) dist *= 2;
 
-            if (efficiency > 0) {
-                const liters = distance / efficiency;
-                const cost = liters * price;
-                document.getElementById('total-cost').innerText = cost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                document.getElementById('fuel-liters').innerText = liters.toFixed(1);
+            const fuel = dist / eff;
+            const total = fuel * price;
+
+            document.getElementById('total-cost').innerText = total.toLocaleString(undefined, {minimumFractionDigits: 2});
+            document.getElementById('res-dist').innerText = dist;
+            document.getElementById('res-fuel').innerText = fuel.toFixed(1);
+            document.getElementById('res-type').innerText = isRound ? "ROUND TRIP" : "1-WAY";
+            document.getElementById('symbol-result').innerText = symbols[curr];
+
+            if (pass > 1) {
+                document.getElementById('split-box').classList.remove('hidden');
+                document.getElementById('per-person').innerText = (total / pass).toLocaleString(undefined, {minimumFractionDigits: 2});
+            } else {
+                document.getElementById('split-box').classList.add('hidden');
             }
         }
 
